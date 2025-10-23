@@ -1,9 +1,9 @@
 ## XRPL Wallet Integration example
 
-백엔드에서 `xrpl.js`로 XRPL 지갑을 생성하고, 터미널 승인과 웹 화면 조작을 조합해 결제 트랜잭션을 전송하는 과정을 보여주는 Next.js 예제입니다. Girin Wallet 데모 구조를 참고해 WalletConnect 의존성을 제거하고 내부 지갑 중심 흐름으로 재구성했습니다.
+백엔드에서 `xrpl.js`로 XRPL 지갑을 생성하고, 터미널 승인과 웹 화면 조작을 조합해 결제 트랜잭션을 전송하는 과정을 보여주는 Next.js 예제입니다.
 
 ### 목적
-- XRPL 개발자가 사내에서 생성한 지갑을 웹 애플리케이션과 연동할 때 필요한 최소 구현을 제공
+- XRPL 개발자가 Backend에서 생성한 지갑을 웹 애플리케이션과 연동할 때 필요한 최소 구현을 제공
 - 최초 연결만 터미널에서 y/n 입력으로 승인하고, 이후 결제는 웹 UI에서 준비/서명하도록 하는 운영 패턴 제시
 - 코드와 문서를 함께 참고해 자체 가이드라인 문서를 빠르게 작성할 수 있도록 지원
 
@@ -44,10 +44,3 @@ XRPL_NETWORK=testnet   # 기본값, 테스트넷
 - `lib/server` : `Wallet.generate()` 결과와 터미널 프롬프트, 네트워크 설정 관리
 - `styles/` : Tailwind CSS 글로벌 스타일 정의
 
-### 확장 아이디어
-- XRPL 노드에서 Sequence/Fee 정보를 캐싱하거나 모니터링 대시보드에 노출
-- CLI 승인 단계를 사내 백오피스 UI로 대체
-- Seed를 안전하게 보관하도록 저장소/KMS 연동
-- Payment 외의 XRPL 메서드(TrustSet, OfferCreate 등)와 대응하는 UI/엔드포인트 추가
-
-세부 흐름과 사용법은 `app/page.tsx`, `app/api/wallet/*`, `lib/server/*` 파일을 참고하세요.
