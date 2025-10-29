@@ -25,6 +25,7 @@ interface PaymentResponse {
     Destination?: string;
     Fee?: string;
     Sequence?: number;
+    DestinationTag?: number;
   };
   result?: {
     engine_result?: string;
@@ -35,6 +36,7 @@ interface PaymentResponse {
 interface PendingPayment {
   destination: string;
   amount: string;
+  destinationTag?: string;
 }
 
 interface ConfirmDialogState {
@@ -52,6 +54,7 @@ export default function Page() {
 
   const [destination, setDestination] = useState('');
   const [amount, setAmount] = useState('');
+  const [destinationTag, setDestinationTag] = useState('');
   const [paymentState, setPaymentState] = useState<PaymentResponse>();
   const [preparingPayment, setPreparingPayment] = useState(false);
   const [signingPayment, setSigningPayment] = useState(false);
@@ -185,6 +188,7 @@ export default function Page() {
 
     const trimmedDestination = destination.trim();
     const trimmedAmount = amount.trim();
+    const trimmedDestinationTag = destinationTag.trim();
 
     if (!trimmedDestination || !trimmedAmount || Number(trimmedAmount) <= 0) {
       setPaymentState({
@@ -193,10 +197,21 @@ export default function Page() {
       return;
     }
 
+    if (trimmedDestinationTag) {
+      const parsedTag = Number(trimmedDestinationTag);
+      if (!Number.isInteger(parsedTag) || parsedTag < 0 || parsedTag > 0xffffffff) {
+        setPaymentState({
+          message: 'Destination Tag는 0 이상 4294967295 이하의 정수로 입력해주세요.',
+        });
+        return;
+      }
+    }
+
     setPreparingPayment(true);
     setPendingPayment({
       destination: trimmedDestination,
       amount: trimmedAmount,
+      destinationTag: trimmedDestinationTag || undefined,
     });
     setPaymentState({
       message: '트랜잭션 요청이 준비되었습니다. Transaction Sign 버튼으로 서명하세요.',
@@ -220,6 +235,10 @@ export default function Page() {
         body: JSON.stringify({
           destination: pendingPayment.destination,
           amount: pendingPayment.amount,
+          destinationTag:
+            pendingPayment.destinationTag !== undefined
+              ? Number(pendingPayment.destinationTag)
+              : undefined,
         }),
       });
 
@@ -230,6 +249,7 @@ export default function Page() {
         setPendingPayment(null);
         setDestination('');
         setAmount('');
+        setDestinationTag('');
       } else {
         setPaymentState({
           message: data.message || '결제 요청 중 오류가 발생했습니다.',
@@ -347,6 +367,23 @@ export default function Page() {
             />
           </div>
 
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-white">
+              Destination Tag (선택 사항)
+            </label>
+            <Input
+              type="number"
+              value={destinationTag}
+              onChange={(event) => setDestinationTag(event.target.value)}
+              placeholder="123456"
+              disabled={!wallet || preparingPayment || signingPayment}
+            />
+            <p className="text-xs text-zinc-400">
+              거래소(CEX)로 전송할 때 Destination Tag를 입력하세요. 다른 지갑으로 보낼 때는
+              비워두셔도 됩니다.
+            </p>
+          </div>
+
           <div className="flex flex-wrap items-center gap-3">
             <Button
               type="submit"
@@ -383,6 +420,9 @@ export default function Page() {
                 )}
                 {typeof paymentState.prepared.Sequence === 'number' && (
                   <p>{`Sequence: ${paymentState.prepared.Sequence}`}</p>
+                )}
+                {typeof paymentState.prepared.DestinationTag === 'number' && (
+                  <p>{`Destination Tag: ${paymentState.prepared.DestinationTag}`}</p>
                 )}
               </div>
             )}

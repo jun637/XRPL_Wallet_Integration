@@ -6,12 +6,26 @@ import { getOrCreateWallet, getWalletNetwork, isConnected } from '@/lib/server/w
 interface PaymentRequestBody {
   amount?: string;
   destination?: string;
+  destinationTag?: number | string;
 }
 
 export async function POST(request: Request) {
   const body = (await request.json()) as PaymentRequestBody;
   const amount = body.amount?.trim();
   const destination = body.destination?.trim();
+  const rawDestinationTag = body.destinationTag;
+  let destinationTag: number | undefined;
+
+  if (rawDestinationTag !== undefined && rawDestinationTag !== null && rawDestinationTag !== '') {
+    const parsed = Number(rawDestinationTag);
+    if (!Number.isInteger(parsed) || parsed < 0 || parsed > 0xffffffff) {
+      return NextResponse.json(
+        { message: 'Destination tag must be an integer between 0 and 4294967295.' },
+        { status: 400 }
+      );
+    }
+    destinationTag = parsed;
+  }
 
   if (!amount || !destination) {
     return NextResponse.json(
@@ -43,6 +57,7 @@ export async function POST(request: Request) {
       Account: wallet.classicAddress,
       Destination: destination,
       Amount: amount,
+      ...(destinationTag !== undefined ? { DestinationTag: destinationTag } : {}),
     };
 
     prepared = (await client.autofill(tx)) as PaymentTx;
