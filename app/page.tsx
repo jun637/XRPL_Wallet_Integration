@@ -276,7 +276,7 @@ export default function Page() {
           XRPL Wallet Integration example
         </h1>
         <p className="text-sm text-white">
-          백엔드에서 생성한 XRPL 지갑을 터미널 상호작용으로 승인하고 웹앱에서 사용하는
+          백엔드에서 생성한 XRPL 지갑을 웹앱에 연결 후 사용하는
           흐름을 보여주는 예제입니다.
         </p>
       </header>
@@ -286,8 +286,7 @@ export default function Page() {
           1. 지갑 연결
         </h2>
         <p className="text-sm text-white">
-          Connect Wallet 버튼을 눌러 백엔드 지갑과 연결 요청을 전송하세요. 현재 상호작용은
-          터미널에서 이루어집니다.
+          Connect Wallet 버튼을 눌러 백엔드 지갑과 연결 요청을 전송하세요.
         </p>
 
         <div className="flex flex-wrap items-center gap-3">
