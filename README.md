@@ -34,7 +34,7 @@ XRPL_NETWORK=testnet   # 기본값, 테스트넷
    yarn dev
    ```
 2. 브라우저에서 `http://localhost:3000` 접속
-3. `Connect Wallet` 버튼 클릭 → 터미널에 표시되는 `Approve wallet connection? (y/n)`에 응답해 연결 승인
+3. `Connect Wallet` 버튼 클릭 → Approve connection? 팝업에서 연결 승인
 4. 결제 대상 주소와 금액 입력 후 `Submit` → 같은 줄에 나타나는 `Transaction Sign` 버튼으로 서명과 전송 수행
 
 ### 주요 폴더
