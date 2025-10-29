@@ -37,11 +37,18 @@ interface PendingPayment {
   amount: string;
 }
 
+interface ConfirmDialogState {
+  type: 'connect' | 'disconnect';
+  title: string;
+  description?: string;
+}
+
 export default function Page() {
   const [wallet, setWallet] = useState<WalletDetails | null>(null);
   const [connectMessage, setConnectMessage] = useState<string>();
   const [connecting, setConnecting] = useState(false);
   const [disconnecting, setDisconnecting] = useState(false);
+  const [confirmation, setConfirmation] = useState<ConfirmDialogState | null>(null);
 
   const [destination, setDestination] = useState('');
   const [amount, setAmount] = useState('');
@@ -50,13 +57,17 @@ export default function Page() {
   const [signingPayment, setSigningPayment] = useState(false);
   const [pendingPayment, setPendingPayment] = useState<PendingPayment | null>(null);
 
-  const handleConnect = async () => {
+  const submitConnect = async (approve: boolean) => {
     setConnecting(true);
     setConnectMessage(undefined);
 
     try {
       const response = await fetch('/api/wallet/connect', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ approve }),
       });
       const data = (await response.json()) as WalletDetails & {
         message: string;
@@ -85,13 +96,17 @@ export default function Page() {
     }
   };
 
-  const handleDisconnect = async () => {
+  const submitDisconnect = async (approve: boolean) => {
     setDisconnecting(true);
     setConnectMessage(undefined);
 
     try {
       const response = await fetch('/api/wallet/disconnect', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ approve }),
       });
       const data = (await response.json()) as { message?: string };
 
@@ -116,6 +131,46 @@ export default function Page() {
     } finally {
       setDisconnecting(false);
     }
+  };
+
+  const handleConnectClick = () => {
+    if (connecting) {
+      return;
+    }
+
+    setConfirmation({
+      type: 'connect',
+      title: 'Approve connection?',
+      description: 'Allow this web application to access the XRPL wallet.',
+    });
+  };
+
+  const handleDisconnectClick = () => {
+    if (disconnecting) {
+      return;
+    }
+
+    setConfirmation({
+      type: 'disconnect',
+      title: 'Disconnect wallet session?',
+      description: 'End the current XRPL wallet session for this web application.',
+    });
+  };
+
+  const handleDialogDecision = (approve: boolean) => {
+    const current = confirmation;
+    setConfirmation(null);
+
+    if (!current) {
+      return;
+    }
+
+    if (current.type === 'connect') {
+      void submitConnect(approve);
+      return;
+    }
+
+    void submitDisconnect(approve);
   };
 
   const handleSubmitPayment = (event: FormEvent<HTMLFormElement>) => {
@@ -217,11 +272,11 @@ export default function Page() {
 
         <div className="flex flex-wrap items-center gap-3">
           {wallet ? (
-            <Button onClick={handleDisconnect} disabled={disconnecting}>
+            <Button onClick={handleDisconnectClick} disabled={disconnecting}>
               {disconnecting ? 'Disconnecting...' : 'Disconnect Wallet'}
             </Button>
           ) : (
-            <Button onClick={handleConnect} disabled={connecting}>
+            <Button onClick={handleConnectClick} disabled={connecting}>
               {connecting ? '연결 요청 중...' : 'Connect Wallet'}
             </Button>
           )}
@@ -355,6 +410,31 @@ export default function Page() {
           </div>
         )}
       </section>
+      {confirmation && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
+          <div className="w-full max-w-sm rounded-lg bg-[#1f1b35] p-6 shadow-lg">
+            <h3 className="text-lg font-semibold text-white">{confirmation.title}</h3>
+            {confirmation.description && (
+              <p className="mt-2 text-sm text-zinc-300">{confirmation.description}</p>
+            )}
+            <div className="mt-6 flex justify-end gap-3">
+              <Button
+                variant="outline"
+                onClick={() => handleDialogDecision(false)}
+                disabled={connecting || disconnecting}
+              >
+                No
+              </Button>
+              <Button
+                onClick={() => handleDialogDecision(true)}
+                disabled={connecting || disconnecting}
+              >
+                Yes
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
